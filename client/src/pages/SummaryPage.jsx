@@ -1,8 +1,9 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { useSelector } from "react-redux";
+import { selectCurrentSession } from "../features/session/selectors";
 import { Link } from "react-router-dom";
 export default function SummaryPage() {
-  const session = useSelector((state) => state.session.currentSession);
+  const session = useSelector(selectCurrentSession);
   const summary = session?.summary;
   if (!summary)
     return (

@@ -2,7 +2,8 @@ import { useState } from "react";
 import { ChevronRight, SlidersHorizontal } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { startSession } from "../features/session/sessionSlice";
+import { startSession } from "../features/session/actions";
+import { selectSession } from "../features/session/selectors";
 
 const options = {
   difficulty: ["Junior", "Mid", "Senior"],
@@ -21,7 +22,7 @@ export default function SetupPage() {
   });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, error } = useSelector((state) => state.session);
+  const { status, error } = useSelector(selectSession);
   const update = (key, value) => setForm({ ...form, [key]: value });
   const submit = async (event) => {
     event.preventDefault();

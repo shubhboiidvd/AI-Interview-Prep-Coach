@@ -2,14 +2,15 @@ import { useState } from "react";
 import { ArrowRight, BrainCircuit } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
-import { loginUser, registerUser } from "../features/auth/authSlice";
+import { loginUser, registerUser } from "../features/auth/actions";
+import { selectAuth } from "../features/auth/selectors";
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, status, error } = useSelector((state) => state.auth);
+  const { isAuthenticated, status, error } = useSelector(selectAuth);
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   const submit = async (event) => {
     event.preventDefault();

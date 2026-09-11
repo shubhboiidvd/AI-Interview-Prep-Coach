@@ -43,4 +43,22 @@ For a client-only API URL override, create `client/.env` with `VITE_API_URL=http
 
 ## Redux architecture
 
-The store lives at `client/src/app/store.js`. Feature state is organized under `client/src/features/`, while `client/src/app/apiSlice.js` owns the shared RTK Query cache and base query. Auth, live session, and voice state have separate slices so the chat experience can compose them without coupling concerns. Session creation, answer evaluation, completion, and re-scoring use async thunks because each flow updates the live chat in multiple stages. Dashboard history and stats use RTK Query for caching and refetching.
+The store lives at `client/src/app/store.js`, and `client/src/app/rootReducer.js` combines the feature reducers. Each feature keeps its Redux responsibilities in separate files:
+
+```text
+client/src/features/
+	auth/
+		actions.js       # synchronous actions and async thunks
+		reducer.js       # auth state and action handling
+		selectors.js     # reusable auth state selectors
+	session/
+		actions.js       # session actions and async thunks
+		reducer.js       # live interview state transitions
+		selectors.js     # reusable session selectors
+	voice/
+		actions.js       # speech input actions
+		reducer.js       # voice state transitions
+		selectors.js     # reusable voice selectors
+```
+
+Components dispatch actions from the feature `actions.js` files and read state through selectors from `selectors.js`. `client/src/app/apiSlice.js` owns the shared RTK Query cache and base query for dashboard data. Async thunks handle authentication, session creation, answer evaluation, completion, and re-scoring because each flow updates state across multiple request stages.

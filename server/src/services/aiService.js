@@ -19,6 +19,59 @@ function wait(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+function normalizeQuestion(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function fallbackQuestion(role, type, previousQuestions) {
+  const prompts =
+    type === "behavioral" ?
+      [
+        `Tell me about a difficult ${role} decision you made and what you learned.`,
+        `Describe a time you received critical feedback in a ${role} role and how you responded.`,
+        `Tell me about a ${role} project where priorities changed unexpectedly.`,
+        `Describe a disagreement with a teammate in a ${role} project and how you resolved it.`,
+        `Tell me about a ${role} mistake you made and the process you changed afterward.`,
+        `Describe a time you had to explain a complex ${role} topic to a nontechnical person.`,
+        `Tell me about a ${role} project where you had to work with limited information.`,
+        `Describe how you handled an aggressive deadline in a ${role} project.`,
+      ]
+    : [
+        `How would you design a reliable system for a ${role} use case?`,
+        `What tradeoffs would you consider when choosing an architecture for a ${role} project?`,
+        `How would you investigate a performance regression in a ${role} application?`,
+        `What testing strategy would you use for a ${role} feature?`,
+        `How would you improve the maintainability of a large ${role} codebase?`,
+        `How would you handle failure and observability in a ${role} service?`,
+        `What security risks would you review in a ${role} implementation?`,
+        `How would you plan a safe migration for a ${role} system?`,
+      ];
+  const previous = new Set(previousQuestions.map(normalizeQuestion));
+  const available = prompts.find(
+    (prompt) => !previous.has(normalizeQuestion(prompt)),
+  );
+  if (available) {
+    return {
+      questionText: available,
+      questionType: type === "behavioral" ? "behavioral" : "technical",
+    };
+  }
+  const fallbackBase = `What is one advanced ${role} topic you would explore further, and why?`;
+  let questionText = fallbackBase;
+  let variation = 1;
+  while (previous.has(normalizeQuestion(questionText))) {
+    questionText = `${fallbackBase} Consider a different angle (${variation}).`;
+    variation += 1;
+  }
+  return {
+    questionText,
+    questionType: type === "behavioral" ? "behavioral" : "technical",
+  };
+}
+
 async function callOpenAI(messages) {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -122,7 +175,8 @@ export async function generateQuestion(
   previousQuestions,
   provider = "openai",
 ) {
-  const prompt = `Create one ${type} interview question for a ${difficulty} ${role} candidate. Avoid these previous questions: ${previousQuestions.join(" | ") || "none"}. Return JSON with questionText and questionType, where questionType is technical or behavioral.`;
+  const previousSet = new Set(previousQuestions.map(normalizeQuestion));
+  const prompt = `Create one ${type} interview question for a ${difficulty} ${role} candidate. It must be substantially different from every previous question. Avoid these previous questions: ${previousQuestions.join(" | ") || "none"}. Return JSON with questionText and questionType, where questionType is technical or behavioral.`;
   const result = await askProvider(
     [
       {
@@ -133,12 +187,14 @@ export async function generateQuestion(
     ],
     provider,
   );
-  return (
-    result || {
-      questionText: `Tell me about a ${role} problem you solved recently and how you measured the result.`,
+  const generatedText = normalizeQuestion(result?.questionText);
+  if (generatedText && !previousSet.has(generatedText)) {
+    return {
+      questionText: result.questionText,
       questionType: type === "behavioral" ? "behavioral" : "technical",
-    }
-  );
+    };
+  }
+  return fallbackQuestion(role, type, previousQuestions);
 }
 
 export async function evaluateAnswer(

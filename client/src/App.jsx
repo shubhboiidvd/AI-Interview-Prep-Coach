@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { loadUser } from "./features/auth/authSlice";
+import { loadUser } from "./features/auth/actions";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import InterviewPage from "./pages/InterviewPage";

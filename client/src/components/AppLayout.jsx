@@ -1,10 +1,11 @@
 import { BarChart3, LogOut, Sparkles } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../features/auth/authSlice";
+import { logout } from "../features/auth/actions";
+import { selectUser } from "../features/auth/selectors";
 
 export default function AppLayout() {
-  const user = useSelector((state) => state.auth.user);
+  const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const signOut = () => {

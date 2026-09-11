@@ -6,12 +6,14 @@ import {
   completeSession,
   rescoreAnswer,
   submitAnswer,
-} from "../features/session/sessionSlice";
+} from "../features/session/actions";
 import {
   setTranscript,
   startListening,
   stopListening,
-} from "../features/voice/voiceSlice";
+} from "../features/voice/actions";
+import { selectSession } from "../features/session/selectors";
+import { selectVoice } from "../features/voice/selectors";
 
 function Feedback({ message, onRescore }) {
   const content = message.content || {};
@@ -71,8 +73,8 @@ function Feedback({ message, onRescore }) {
 }
 export default function InterviewPage() {
   const { currentSession, currentQuestion, chatHistory, status, error } =
-    useSelector((state) => state.session);
-  const voice = useSelector((state) => state.voice);
+    useSelector(selectSession);
+  const voice = useSelector(selectVoice);
   const [answer, setAnswer] = useState("");
   const recognition = useRef(null);
   const dispatch = useDispatch();
